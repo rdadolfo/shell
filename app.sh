@@ -1,13 +1,13 @@
 #!/bin/sh
 set +o sh
 
-#Check user as permission to access etc folder
+###Check user as permission to access etc folder
 if [[ -x /usr/bin/id ]] && (($(id -u) != 0)); then
 	echo "${0##*/}: need root privileges"
 	exit 1
 fi
 
-extract () {
+extract () {  ###Function to extract the backup tar file.
 dir=/tmp/$1
 empty=$(ls -ls | wc -l)
 ETC=$1.tar.gz
@@ -20,16 +20,16 @@ if [[ -s "$dir" ]] || (($empty != 0)); then
 fi
 }
 
-clean_temp () {
+clean_temp () { ###Function to delete the untar files in temp folder.
         if [[ -d "$1" ]]; then
-                rm -r $1  ###Remove the conf files in temp
+                rm -r $1  ###Remove the conf files in temp.
         else
                 echo "Clean the Temp folder"
         fi
 }
 
 extract pkg
-whereis squid
+whereis squid ###Check to Squid binary and install if it's fail.
 if [[ ! $? -eq 0 ]]; then 
 	pkg_add gmake gnutls-3.6.10 db-4.6.21p7v0 openldap-client-2.4.48
 	PKG_PATH=$dir pkg_add -D unsigned squid35-ldap
@@ -37,14 +37,14 @@ if [[ ! $? -eq 0 ]]; then
 fi
 
 
-extract etc
+extract etc ###Extract the etc folder to copy the squid configuration.
 #cp /tmp/etc/squid/{squid.conf,secret,allow.txt,allow_sales.txt} /etc/squid/
-squid -v
+squid -v 
 if [[ ! $? -eq 0 ]]; then
 	cp -r $dir/* /etc/squid/
 fi
 
-rsync --version
+rsync --version  ###Check rsync if it's install then using if else statement to install the apps.
 if [[ ! $? -eq 0 ]]; then
 	pkg_add rsync-3.1.3
 	if [[ ! -d "/etc/rsync" ]] && [[ ! -f "/etc/rsyncd.conf" ]] ; then
@@ -58,7 +58,7 @@ if [[ ! $? -eq 0 ]]; then
 	fi
 fi
 
-squidlog=/var/log/squid
+squidlog=/var/log/squid ###Check if the logs folder for squid is created.
 if [[ ! -d "$squidlog" ]]; then
 	mkdir $squidlog
 	chown _squid $squidlog
@@ -66,7 +66,7 @@ if [[ ! -d "$squidlog" ]]; then
 	rcctl enable squid
 fi
 
-ufdbgclient -v
+ufdbgclient -v   ###Check ufdbGuard if it's install then using if else statement to install the apps.
 
 if [[ ! $? -eq 0 ]]; then
 	extract ufdbGuard-1.34.2
@@ -89,7 +89,7 @@ rc_cmd \$1" > /etc/rc.d/ufdb
 	clean_temp $dir 
 fi
 
-extract ufdbguard
+extract ufdbguard ###Check if the ufdbguard backup files is copy to var folder.
 count=$(ls -ls /var/ufdbguard | wc -l)
 if [[ $count -le 1 ]]; then
 	cp -r $dir /var

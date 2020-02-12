@@ -1,13 +1,13 @@
 #!/bin/sh 
 set +o sh
 
-#Check user as permission to access etc folder
+###Check user as permission to access etc folder
 if [[ -x /usr/bin/id ]] && (($(id -u) != 0)); then
         echo "${0##*/}: need root privileges"
         exit 1
 fi
 
-#Backup file of etc folder and extract using tar
+###Backup file of etc folder and extract using tar
 ETC=etc.tar.gz
 dir=/tmp/etc
 extract_etc="tar -xzpf $ETC -C /tmp"
@@ -24,9 +24,7 @@ else
 	fi
 fi
 
-#Verify configuration file
-
-verify_int () {
+verify_int () {   ###Function to verify the interface config file and copy to etc folder.
 
 cmd="find $dir -name $1" 
 
@@ -58,7 +56,7 @@ fi
 }
 
 
-verify_etc () {
+verify_etc () {    ###Function to verify the file config before creating to etc folder.
 etc=$1
 int="cat /tmp/etc/$etc"
 $int;
@@ -88,7 +86,7 @@ verify_etc relayd.conf
 verify_etc ifstated.conf
 verify_etc doas.conf
 
-rc_ctlr () {
+rc_ctlr () {   ###Function for enabling and starting the system.
         sys=/etc/$1.conf
         if [ -f $sys -a -s $sys ]; then
                 rcctl enable $1;
@@ -108,11 +106,11 @@ else
         $extract_script; rctlr ifstated
 fi
 
-sh /etc/netstart ##Restart Network
+sh /etc/netstart ###Restart Network
 
-pfctl -nf /tmp/etc/pf.conf 2>&1
+pfctl -nf /tmp/etc/pf.conf 2>&1 ###Check the Packet Filter configuration for error free
 
-if [ $? -eq 0 ]; then
+if [ $? -eq 0 ]; then  ###If the PF file is free from error it will apply and load it to the firewall.
         verify_etc pf.conf
 	pfctl -F rules -f /etc/pf.conf
 else

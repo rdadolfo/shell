@@ -36,13 +36,17 @@ if [[ ! $? -eq 0 ]]; then
 fi
 clean_temp $dir
 
-extract etc ###Extract the etc folder to copy the configuration file.
-cp -r $dir/squid/* /etc/squid/
+extract etc ###Extract the etc folder to copy the squid configuration.
+#cp /tmp/etc/squid/{squid.conf,secret,allow.txt,allow_sales.txt} /etc/squid/
+squid -v 
+if [[ ! $? -eq 0 ]]; then
+	cp -r $dir/squid/* /etc/squid/
+fi
 
 rsync --version  ###Check rsync if it's install then using if else statement to install the apps.
 if [[ ! $? -eq 0 ]]; then
 	pkg_add rsync-3.1.3
-	if [[ ! -d "/etc/rsync" ]]; then
+	if [[ ! -d "/etc/rsync" ]] && [[ ! -f "/etc/rsyncd.conf" ]] ; then
 		cp -r $dir/rsync /etc/
 		cat $dir/rsyncd.conf > /etc/rsyncd.conf
 		chgrp -R _rsync /etc/rsync
@@ -62,7 +66,8 @@ if [[ ! -d "$squidlog" ]]; then
 	rcctl enable squid
 fi
 
-ufdbgclient -v   ###Check ufdbGuard if it's install then using if else statement to install the apps.
+#ufdbgclient -v   ###Check ufdbGuard if it's install then using if else statement to install the apps.
+ufdb.sh status
 if [[ ! $? -eq 0 ]]; then
 	extract ufdbGuard-1.34.2
 	pkg_add bzip2 
@@ -70,7 +75,7 @@ if [[ ! $? -eq 0 ]]; then
 	CFLAGS='-pipe -pthread -O2 -march=native' CC=cc CPP=cpp ./configure --prefix=/usr/local/ --with-bz2=/usr/local
 	gmake -j4
 	gmake install
-	echo "#!/bin/sh  
+	echo "#!/bin/sh 
 #
 # \$OpenBSD: ufdb,v 1.34.2 2016/02/02 17:51:11 sthen Exp $
 
@@ -78,7 +83,7 @@ daemon=\"/usr/local/bin/ufdbguardd\"
 
 . /etc/rc.d/rc.subr
 
-rc_cmd \$1" > /etc/rc.d/ufdb ###Create runlevel of ufdbGuard
+rc_cmd \$1" > /etc/rc.d/ufdb
 	chmod a+x /etc/rc.d/ufdb
         clean_temp $dir
 

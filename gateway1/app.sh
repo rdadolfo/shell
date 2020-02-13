@@ -13,9 +13,9 @@ empty=$(ls -ls | wc -l)
 ETC=$1.tar.gz
 if [[ -s "$dir" ]] || (($empty != 0)); then
 	if [[ -f "$ETC" ]]; then
-		tar -xpzf $ETC -C /tmp;
+		 tar -xpzf $ETC -C /tmp
 	else
-		echo "Please copy etc.tar.gz with the same path of script."
+		echo "Please copy $1.tar.gz with the same path of script."
 	fi
 fi
 }
@@ -23,7 +23,7 @@ fi
 clean_temp () { ###Function to delete the untar files in temp folder.
         if [[ -d "$1" ]]; then
                 rm -r $1  ###Remove the conf files in temp.
-        else
+	else
                 echo "Clean the Temp folder"
         fi
 }
@@ -33,9 +33,8 @@ whereis squid ###Check to Squid binary and install if it's fail.
 if [[ ! $? -eq 0 ]]; then 
 	pkg_add gmake gnutls-3.6.10 db-4.6.21p7v0 openldap-client-2.4.48
 	PKG_PATH=$dir pkg_add -D unsigned squid35-ldap
-	clean_temp $dir
 fi
-
+clean_temp $dir
 
 extract etc ###Extract the etc folder to copy the squid configuration.
 #cp /tmp/etc/squid/{squid.conf,secret,allow.txt,allow_sales.txt} /etc/squid/
@@ -54,9 +53,10 @@ if [[ ! $? -eq 0 ]]; then
 		chgrp -R _rsync /etc/rsyncd.conf
 		rcctl enable rsyncd
 		rcctl start rsyncd
-		clean_temp $dir 
 	fi
 fi
+
+clean_temp $dir
 
 squidlog=/var/log/squid ###Check if the logs folder for squid is created.
 if [[ ! -d "$squidlog" ]]; then
@@ -66,8 +66,8 @@ if [[ ! -d "$squidlog" ]]; then
 	rcctl enable squid
 fi
 
-ufdbgclient -v   ###Check ufdbGuard if it's install then using if else statement to install the apps.
-
+#ufdbgclient -v   ###Check ufdbGuard if it's install then using if else statement to install the apps.
+ufdb.sh status
 if [[ ! $? -eq 0 ]]; then
 	extract ufdbGuard-1.34.2
 	pkg_add bzip2 
@@ -85,16 +85,18 @@ daemon=\"/usr/local/bin/ufdbguardd\"
 
 rc_cmd \$1" > /etc/rc.d/ufdb
 	chmod a+x /etc/rc.d/ufdb
-	cat ~/ufdbGuard.conf > /usr/local/etc/ufdbGuard.conf 
-	clean_temp $dir 
-fi
+        clean_temp $dir
 
-extract ufdbguard ###Check if the ufdbguard backup files is copy to var folder.
-count=$(ls -ls /var/ufdbguard | wc -l)
-if [[ $count -le 1 ]]; then
-	cp -r $dir /var
-	rcctl enable ufdb
-	rcctl start ufdb
-	rcctl start squid
-	clean_temp $dir
-fi
+	cd -
+	extract usr_local_etc
+        cat /tmp/usr/local/etc/ufdbGuard.conf > /usr/local/etc/ufdbGuard.conf
+        clean_temp /tmp/usr
+
+        extract ufdbguard ###Check if the ufdbguard backup files is copy to var folder.
+        cp -r $dir /var
+        rcctl enable ufdb
+        rcctl start ufdb
+        rcctl start squid
+        clean_temp $dir
+
+fi	

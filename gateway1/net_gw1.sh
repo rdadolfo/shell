@@ -89,8 +89,8 @@ verify_etc doas.conf
 rc_ctlr () {   ###Function for enabling and starting the system.
         sys=/etc/$1.conf
         if [ -f $sys -a -s $sys ]; then
-                rcctl enable $1;
-                rcctl start $1;
+                rcctl enable $1
+                rcctl start $1
         fi
 }
 
@@ -103,7 +103,7 @@ if [[ -d $script ]]; then
                 $extract_script; rc_ctlr ifstated
         fi
 else
-        $extract_script; rctlr ifstated
+        $extract_script; rc_ctlr ifstated
 fi
 
 sh /etc/netstart ###Restart Network
